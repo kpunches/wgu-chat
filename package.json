@@ -1,7 +1,7 @@
 {
   "name": "coda-chat-engine-proxy",
   "version": "1.0.0",
-  "description": "Proxy server for Coda Chat Engine — holds Anthropic API key server-side",
+  "description": "Proxy server for Coda Chat Engine \u2014 holds Anthropic API key server-side",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -13,5 +13,6 @@
   },
   "engines": {
     "node": ">=18"
-  }
+  },
+  "type": "module"
 }

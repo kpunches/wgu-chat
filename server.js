@@ -60,7 +60,11 @@ app.all("/coda/*", async (req, res) => {
 
   // Strip /coda prefix, forward the rest to Coda
   const codaPath = req.path.replace(/^\/coda/, "");
-  const url = `${CODA_BASE}${codaPath}${req.url.includes("?") ? "?" + req.url.split("?")[1] : ""}`;
+  const qs  = req.url.includes("?") ? "?" + req.url.split("?")[1] : "";
+  const url = `${CODA_BASE}${codaPath}${qs}`;
+
+  // Log every request for debugging
+  console.log(`[proxy] ${req.method} ${url}`);
 
   try {
     const fetchOptions = {
@@ -78,12 +82,29 @@ app.all("/coda/*", async (req, res) => {
     const response = await fetch(url, fetchOptions);
     const data     = await response.json();
 
+    if (!response.ok) {
+      console.error(`[proxy] Coda ${response.status}:`, JSON.stringify(data));
+    }
+
     res.status(response.status).json(data);
 
   } catch (err) {
-    console.error("Proxy error:", err);
+    console.error("[proxy] Error:", err);
     res.status(500).json({ ok: false, error: err.message });
   }
+});
+
+// ── Debug: test token against a known endpoint ────────────────────────────────
+app.get("/debug/token", async (req, res) => {
+  const token = process.env.CODA_API_TOKEN;
+  if (!token) return res.json({ ok: false, error: "No token" });
+
+  // Try to list docs — simplest auth test
+  const r = await fetch(`${CODA_BASE}/docs?limit=3`, {
+    headers: { "Authorization": `Bearer ${token}` },
+  });
+  const data = await r.json();
+  res.json({ status: r.status, ok: r.ok, data });
 });
 
 app.use((req, res) => res.status(404).json({ ok: false, error: "Not found" }));
